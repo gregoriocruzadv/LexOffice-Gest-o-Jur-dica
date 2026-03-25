@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LexOffice — Gregório Cruz Advocacia</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&family=Montserrat:wght@500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<style>
+:root {
+  --bg-app: #f4f5f7; --surface: #ffffff; --surface-hover: #fafafa; --border: #dde1e8;
+  --navy: #1a3057; --navy-hover: #224070; --gold: #b8922a; --gold-light: rgba(184, 146, 42, 0.12);
+  --text-main: #333333; --text-muted: #555555; --text-light: #888888;
+  --success: #1e8a5e; --success-bg: rgba(30, 138, 94, 0.1);
+  --danger: #c0392b; --danger-bg: rgba(192, 57, 43, 0.1);
+  --warning: #c96a1a; --warning-bg: rgba(201, 106, 26, 0.1);
+  --radius-lg: 8px; --radius-md: 6px; --radius-sm: 4px;
+  --shadow-sm: 0 2px 8px rgba(26, 48, 87, 0.04); --shadow-md: 0 8px 24px rgba(26, 48, 87, 0.08);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Lato', sans-serif; background: var(--bg-app); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, h5, h6, .logo, .page-title, .card-title, .stat-value { font-family: 'Montserrat', sans-serif; }
+
+/* LAYOUT */
+.sidebar { width: 260px; background: var(--navy); color: #fff; display: flex; flex-direction: column; flex-shrink: 0; z-index: 50; box-shadow: 2px 0 12px rgba(0,0,0,0.1); }
+.sidebar-header { height: 72px; display: flex; align-items: center; padding: 0 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.logo { font-size: 1.2rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em; }
+.logo i { color: var(--gold); font-size: 1.6rem; }
+.logo-sub { display: block; font-family: 'Lato', sans-serif; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.6); font-weight: 700; margin-top: 2px; }
+
+.nav-menu { padding: 24px 12px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex: 1; }
+.nav-section-title { font-size: 0.7rem; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin: 16px 0 8px 12px; }
+.nav-tab { padding: 12px 16px; border-radius: var(--radius-md); cursor: pointer; font-size: 0.9rem; font-weight: 400; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 12px; border: none; background: transparent; transition: all 0.2s; width: 100%; text-align: left; }
+.nav-tab i { font-size: 1.25rem; color: rgba(255,255,255,0.5); transition: color 0.2s; }
+.nav-tab:hover { background: rgba(255,255,255,0.05); color: #fff; }
+.nav-tab:hover i { color: #fff; }
+.nav-tab.active { background: linear-gradient(90deg, rgba(184, 146, 42, 0.15) 0%, transparent 100%); border-left: 3px solid var(--gold); color: #fff; font-weight: 700; border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.nav-tab.active i { color: var(--gold); }
+
+.main-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.top-header { height: 72px; background: var(--bg-app); display: flex; align-items: center; justify-content: space-between; padding: 0 32px; flex-shrink: 0; }
+.search-bar-wrap { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0 16px; width: 360px; transition: border-color 0.2s; box-shadow: var(--shadow-sm); }
+.search-bar-wrap:focus-within { border-color: var(--navy); }
+.search-bar-wrap i { color: var(--text-light); font-size: 1.1rem; }
+.top-search { border: none; background: transparent; padding: 12px; font-family: inherit; font-size: 0.9rem; color: var(--text-main); width: 100%; outline: none; }
+.user-profile { display: flex; align-items: center; gap: 12px; background: var(--surface); padding: 6px 16px 6px 6px; border-radius: 99px; border: 1px solid var(--border); box-shadow: var(--shadow-sm); cursor: pointer;}
+.user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; font-family: 'Montserrat', sans-serif;}
+
+.content-area { flex: 1; overflow-y: auto; padding: 0 32px 32px 32px; }
+.section { display: none; animation: fadeIn 0.3s ease; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Animação do Título */
+.title-container { position: relative; height: 35px; display: flex; align-items: center; }
+.title-anim { position: absolute; left: 0; top: 0; transition: opacity 0.8s ease; white-space: nowrap; font-size: 1.5rem; font-weight: 700; color: var(--navy); }
+.urgency-banner { display: none; width: 100%; background: var(--warning-bg); border-left: 4px solid var(--warning); padding: 14px 20px; border-radius: var(--radius-md); margin-top: 16px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+
+/* COMPONENTES */
+.page-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; padding-top: 16px; }
+.page-title { font-size: 1.5rem; font-weight: 700; color: var(--navy); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: var(--radius-md); font-family: 'Lato', sans-serif; font-size: 0.9rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; white-space: nowrap; }
+.btn i { font-size: 1.1rem; }
+.btn-navy { background: var(--navy); color: #fff; box-shadow: 0 4px 12px rgba(26, 48, 87, 0.15); }
+.btn-navy:hover { background: var(--navy-hover); transform: translateY(-1px); }
+.btn-ghost { background: var(--surface); border-color: var(--border); color: var(--text-main); box-shadow: var(--shadow-sm); }
+.btn-ghost:hover { background: var(--surface-hover); border-color: #c8cdd8; }
+.btn-danger { background: var(--danger-bg); border-color: transparent; color: var(--danger); }
+.btn-danger:hover { background: rgba(192, 57, 43, 0.15); }
+.btn-success { background: var(--success-bg); border-color: transparent; color: var(--success); }
+.btn-success:hover { background: rgba(30, 138, 94, 0.15); }
+.btn-sm { padding: 6px 14px; font-size: 0.8rem; }
+.btn-xs { padding: 4px 10px; font-size: 0.75rem; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); margin-bottom: 24px; overflow: hidden; }
+.card-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #fff; }
+.card-title { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; position: relative; overflow: hidden; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
+.stat-card::before { content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: var(--accent, var(--navy)); }
+.stat-label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; padding-left: 8px;}
+.stat-value { font-size: 2.2rem; font-weight: 800; color: var(--navy); line-height: 1; padding-left: 8px;}
+.stat-icon { position: absolute; right: 20px; bottom: 20px; font-size: 2.5rem; color: var(--bg-app); z-index: 0; opacity: 0.7; }
+
+.table-wrap { overflow-x: auto; width: 100%; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th { padding: 14px 24px; font-family: 'Montserrat', sans-serif; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); background: var(--surface); white-space: nowrap; }
+td { padding: 16px 24px; font-size: 0.9rem; color: var(--text-main); border-bottom: 1px solid var(--border); vertical-align: middle; }
+tbody tr:hover { background: var(--surface-hover); }
+tbody tr:last-child td { border-bottom: none; }
+td.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-muted); }
+
+.chip { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: var(--radius-sm); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; border: 1px solid transparent; }
+.chip.ativo, .chip.pago, .chip.concluido, .chip.em-dia { background: var(--success-bg); color: var(--success); border-color: rgba(30, 138, 94, 0.2); }
+.chip.arquivado { background: #f0f2f5; color: var(--text-muted); border-color: var(--border); }
+.chip.pendente, .chip.receber, .chip.expirando { background: var(--warning-bg); color: var(--warning); border-color: rgba(201, 106, 26, 0.2); }
+.chip.urgente, .chip.vencido, .chip.expirado { background: var(--danger-bg); color: var(--danger); border-color: rgba(192, 57, 43, 0.2); }
+
+/* Modais & Forms */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group.span2 { grid-column: span 2; }
+label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+input, select, textarea { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 14px; font-family: 'Lato', sans-serif; font-size: 0.9rem; color: var(--text-main); outline: none; transition: all 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.01); }
+input:focus, select:focus, textarea:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26, 48, 87, 0.1); }
+textarea { resize: vertical; min-height: 80px; }
+
+.overlay { position: fixed; inset: 0; background: rgba(26, 48, 87, 0.5); backdrop-filter: blur(2px); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+.overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: var(--surface); border-radius: var(--radius-lg); width: 100%; max-width: 680px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md); transform: translateY(10px); transition: transform 0.2s; }
+.overlay.open .modal { transform: none; }
+.modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-family: 'Montserrat', sans-serif; font-size: 1.25rem; font-weight: 700; color: var(--navy); }
+.modal-close { background: var(--bg-app); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.modal-close:hover { color: var(--navy); border-color: var(--navy); }
+.modal-body { padding: 24px; }
+.modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; background: var(--surface); }
+
+.proc-header-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+.proc-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--border); margin-bottom: 24px; }
+.proc-tab { padding: 10px 20px; font-size: 0.9rem; font-weight: 700; color: var(--text-muted); cursor: pointer; border: none; background: none; font-family: 'Lato', sans-serif; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+.proc-tab:hover { color: var(--navy); }
+.proc-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+
+.empty { padding: 60px 20px; text-align: center; color: var(--text-light); }
+.empty-icon { font-size: 3rem; margin-bottom: 12px; color: var(--border); }
+.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-light); }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <i class="ph-fill ph-scales"></i>
+      <div>
+        LexOffice
+        <span class="logo-sub">Gregório Cruz Advocacia</span>
+      </div>
+    </div>
+  </div>
+  
+  <nav class="nav-menu">
+    <div class="nav-section-title">Visão Geral</div>
+    <button class="nav-tab active" onclick="showSection('dashboard', this)"><i class="ph ph-squares-four"></i> Painel</button>
+    <button class="nav-tab" onclick="showSection('agenda', this)"><i class="ph ph-calendar-blank"></i> Calendário</button>
+    <button class="nav-tab" onclick="showSection('prazos', this)"><i class="ph ph-clock"></i> Prazos e Diligências</button>
+    
+    <div class="nav-section-title">Gestão</div>
+    <button class="nav-tab" onclick="showSection('clientes', this)"><i class="ph ph-users"></i> Clientes</button>
+    <button class="nav-tab" onclick="showSection('processos', this); fecharDetalhe()"><i class="ph ph-folder-open"></i> Processos</button>
+    <button class="nav-tab" id="menu-honorarios" onclick="showSection('honorarios', this)"><i class="ph ph-currency-dollar"></i> Honorários</button>
+  </nav>
+</aside>
+
+<div class="main-wrapper">
+  
+  <header class="top-header">
+    <div class="search-bar-wrap">
+      <i class="ph ph-magnifying-glass"></i>
+      <input type="text" class="top-search" placeholder="" onkeydown="buscaGlobal(event, this)">
+    </div>
+    <div class="user-profile" onclick="alert('No futuro, este menu permitirá acessar seu Perfil ou fazer Logout do sistema.')">
+      <div class="user-avatar">MC</div>
+      <span style="font-size: 0.9rem; font-weight: 700; color: var(--navy);">Dr. Matheus Cruz</span>
+      <i class="ph ph-caret-down" style="color: var(--text-muted); font-size: 0.8rem; margin-right: 4px;"></i>
+    </div>
+  </header>
+
+  <main class="content-area">
+    
+    <section id="dashboard" class="section active">
+      <div style="display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 24px; padding-top: 16px;">
+        <div class="title-container">
+          <span id="anim-greeting" class="title-anim">Bem-vindo, Matheus Gregório Cruz 👋</span>
+          <span id="static-title" class="title-anim" style="opacity: 0; pointer-events: none;">Painel de Gestão</span>
+        </div>
+        <p id="dash-date" style="color: var(--text-muted); font-size: 0.9rem; margin-top: 8px;"></p>
+        
+        <div id="urgency-banner" class="urgency-banner">
+          <strong style="color: var(--warning); font-family: 'Montserrat', sans-serif; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+            <i class="ph-fill ph-warning-circle" style="font-size: 1.3rem;"></i> 
+            Você tem <span id="urgency-count">0</span> pendência(s) para hoje:
+          </strong>
+          <ul id="urgency-list" style="margin-top: 10px; margin-left: 32px; font-size: 0.9rem; color: var(--text-main); line-height: 1.6;">
+            </ul>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent: var(--navy)"><span class="stat-label">Clientes</span><span class="stat-value" id="s-clientes">0</span><i class="ph-fill ph-users stat-icon"></i></div>
+        <div class="stat-card" style="--accent: var(--gold)"><span class="stat-label">Processos Ativos</span><span class="stat-value" id="s-processos">0</span><i class="ph-fill ph-folder-open stat-icon"></i></div>
+        <div class="stat-card" style="--accent: var(--danger)"><span class="stat-label">Prazos Próximos</span><span class="stat-value" id="s-prazos" style="color: var(--danger)">0</span><i class="ph-fill ph-warning-circle stat-icon"></i></div>
+        <div class="stat-card" id="card-recebido" style="--accent: var(--success)"><span class="stat-label">Recebido no Mês</span><span class="stat-value" id="s-recebido" style="color: var(--success)">R$ 0</span><i class="ph-fill ph-check-circle stat-icon"></i></div>
+      </div>
+
+      <div class="form-grid">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Próximos Prazos</span></div>
+          <div class="table-wrap"><table id="dash-prazos-tb"></table></div>
+        </div>
+        
+        <div class="card">
+          <div class="card-header"><span class="card-title">Últimos Processos</span></div>
+          <div class="table-wrap"><table id="dash-proc-tb"></table></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="clientes" class="section">
+      <div class="page-toolbar">
+        <h1 class="page-title">Gestão de Clientes</h1>
+        <div style="display: flex; gap: 8px;">
+          <input class="search-bar-wrap top-search" style="width: 200px; padding: 10px; border-radius: var(--radius-md);" type="text" placeholder="Buscar cliente..." oninput="filterClientes(this.value)">
+          <button class="btn btn-navy" onclick="openModal('modal-cliente')"><i class="ph ph-plus"></i> Novo Cliente</button>
+        </div>
+      </div>
+      <div class="card"><div class="table-wrap">
+        <table>
+          <thead><tr><th>Nome</th><th>CPF / CNPJ</th><th>Telefone</th><th>Tipo</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tb-clientes"><tr><td colspan="6"><div class="empty"><i class="ph ph-users empty-icon"></i><p>Nenhum cliente</p></div></td></tr></tbody>
+        </table>
+      </div></div>
+    </section>
+
+    <section id="processos" class="section">
+      <div id="proc-list-view">
+        <div class="page-toolbar">
+          <h1 class="page-title">Processos</h1>
+          <div style="display: flex; gap: 8px;">
+            <input class="search-bar-wrap top-search" style="width: 250px; padding: 10px; border-radius: var(--radius-md);" type="text" placeholder="Buscar por número ou nome..." oninput="filterProcessos(this.value)" id="busca-processos-input">
+            <button class="btn btn-navy" onclick="openModal('modal-processo')"><i class="ph ph-plus"></i> Novo Processo</button>
+          </div>
+        </div>
+        <div class="card"><div class="table-wrap">
+          <table>
+            <thead><tr><th>Nº do Processo</th><th>Cliente</th><th>Comarca</th><th>Vara / Fórum</th><th>Área</th><th>Fase</th><th>Status</th><th>Ações</th></tr></thead>
+            <tbody id="tb-processos"><tr><td colspan="8"><div class="empty"><i class="ph ph-folder-open empty-icon"></i><p>Nenhum processo</p></div></td></tr></tbody>
+          </table>
+        </div></div>
+      </div>
+
+      <div id="proc-detail-view" style="display:none">
+        <div style="margin-bottom: 16px;"><button class="btn btn-ghost btn-sm" onclick="fecharDetalhe()"><i class="ph ph-arrow-left"></i> Voltar à lista</button></div>
+        
+        <div class="proc-header-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+            <div>
+              <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 4px;" id="det-num"></div>
+              <h2 style="font-family: 'Montserrat', sans-serif; font-size: 1.8rem; font-weight: 700; color: var(--navy);" id="det-cliente"></h2>
+              <div style="display:flex; gap:8px; margin-top: 12px;" id="det-chips"></div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-ghost btn-sm" id="det-edit-btn"><i class="ph ph-pencil-simple"></i> Editar</button>
+              <button class="btn btn-danger btn-sm" id="det-del-btn"><i class="ph ph-trash"></i> Excluir</button>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding-top: 16px; border-top: 1px solid var(--border);" id="det-meta"></div>
+        </div>
+
+        <div class="proc-tabs">
+          <button class="proc-tab active" onclick="showPTab('pt-resumo',this)"><i class="ph ph-text-align-left"></i> Resumo</button>
+          <button class="proc-tab" onclick="showPTab('pt-prazos',this)"><i class="ph ph-clock"></i> Prazos</button>
+          <button class="proc-tab" onclick="showPTab('pt-audiencias',this)"><i class="ph ph-calendar-blank"></i> Audiências</button>
+          <button class="proc-tab" id="tab-hon" onclick="showPTab('pt-hon',this)"><i class="ph ph-currency-dollar"></i> Honorários</button>
+        </div>
+
+        <div id="pt-resumo" class="proc-tab-content active">
+          <div class="card">
+            <div style="padding: 24px; border-bottom: 1px solid var(--border);"><p style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:8px;">Objeto / Resumo da Ação</p><p id="det-resumo" style="font-size:0.95rem; line-height:1.6; color: var(--text-main);"></p></div>
+            <div style="padding: 24px;"><p style="font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-muted); margin-bottom:8px;">Andamentos / Observações</p><p id="det-obs" style="font-size:0.95rem; line-height:1.6; color: var(--text-main);"></p></div>
+          </div>
+        </div>
+        
+        <div id="pt-prazos" class="proc-tab-content" style="display:none;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 16px;"><h3 style="font-size: 1.2rem; font-family: 'Montserrat', sans-serif; color: var(--navy);">Prazos Vinculados</h3><button class="btn btn-navy btn-sm" onclick="novoVinc('prazo')"><i class="ph ph-plus"></i> Novo Prazo</button></div>
+          <div class="card"><div class="table-wrap"><table><thead><tr><th>O que fazer</th><th>Tipo</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody id="det-prazos-tb"></tbody></table></div></div>
+        </div>
+
+        <div id="pt-audiencias" class="proc-tab-content" style="display:none;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 16px;"><h3 style="font-size: 1.2rem; font-family: 'Montserrat', sans-serif; color: var(--navy);">Eventos e Audiências</h3><button class="btn btn-navy btn-sm" onclick="novoVinc('audiencia')"><i class="ph ph-plus"></i> Nova Audiência</button></div>
+          <div id="det-ag-list"></div>
+        </div>
+
+        <div id="pt-hon" class="proc-tab-content" style="display:none;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 16px;"><h3 style="font-size: 1.2rem; font-family: 'Montserrat', sans-serif; color: var(--navy);">Honorários</h3><button class="btn btn-navy btn-sm" onclick="novoVinc('honorario')"><i class="ph ph-plus"></i> Novo Honorário</button></div>
+          <div class="card"><div class="table-wrap"><table><thead><tr><th>Descrição</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody id="det-hon-tb"></tbody></table></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="honorarios" class="section">
+      <div class="page-toolbar"><h1 class="page-title">Controle Financeiro</h1><button class="btn btn-navy" onclick="openModal('modal-honrario')"><i class="ph ph-plus"></i> Lançar Honorário</button></div>
+      <div class="stats-grid">
+        <div class="stat-card" style="--accent: var(--gold)"><span class="stat-label">Total a Receber</span><span class="stat-value" id="hon-total-receber">R$ 0,00</span><i class="ph-fill ph-hand-coins stat-icon" style="color: var(--gold-light);"></i></div>
+        <div class="stat-card" style="--accent: var(--success)"><span class="stat-label">Total Recebido</span><span class="stat-value" style="color: var(--success)" id="hon-total-pago">R$ 0,00</span><i class="ph-fill ph-check-circle stat-icon" style="color: var(--success-bg);"></i></div>
+        <div class="stat-card" style="--accent: var(--danger)"><span class="stat-label">Total Vencido</span><span class="stat-value" style="color: var(--danger)" id="hon-total-vencido">R$ 0,00</span><i class="ph-fill ph-warning-circle stat-icon" style="color: var(--danger-bg);"></i></div>
+      </div>
+      <div class="card"><div class="table-wrap"><table><thead><tr><th>Descrição</th><th>Cliente / Processo</th><th>Valor</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody id="tb-honorarios"><tr><td colspan="6"><div class="empty"><i class="ph ph-currency-dollar empty-icon"></i><p>Nenhum lançamento</p></div></td></tr></tbody></table></div></div>
+    </section>
+
+    <section id="agenda" class="section">
+      <div class="page-toolbar"><h1 class="page-title">Calendário</h1><button class="btn btn-navy" onclick="openModal('modal-agenda')"><i class="ph ph-plus"></i> Novo Evento</button></div>
+      <div id="agenda-list"><div class="empty"><i class="ph ph-calendar-blank empty-icon"></i><p>Agenda vazia</p></div></div>
+    </section>
+
+    <section id="prazos" class="section">
+      <div class="page-toolbar"><h1 class="page-title">Prazos & Diligências</h1><button class="btn btn-navy" onclick="openModal('modal-prazo')"><i class="ph ph-plus"></i> Novo Prazo</button></div>
+      <div class="card"><div class="table-wrap"><table><thead><tr><th>O que fazer</th><th>Processo / Cliente</th><th>Vencimento</th><th>Prioridade</th><th>Situação</th><th>Ações</th></tr></thead><tbody id="tb-prazos"><tr><td colspan="6"><div class="empty"><i class="ph ph-clock empty-icon"></i><p>Nenhum prazo</p></div></td></tr></tbody></table></div></div>
+    </section>
+
+  </main>
+</div>
+
+<div class="overlay" id="modal-cliente"><div class="modal"><div class="modal-header"><div class="modal-title" id="t-cliente">Novo Cliente</div><button class="modal-close" onclick="closeModal('modal-cliente')"><i class="ph ph-x"></i></button></div><div class="modal-body"><div class="form-grid"><div class="form-group span2"><label>Nome *</label><input id="cl-nome" type="text"></div><div class="form-group"><label>Tipo</label><select id="cl-tipo"><option>Pessoa Física</option><option>Pessoa Jurídica</option></select></div><div class="form-group"><label>CPF / CNPJ</label><input id="cl-doc" type="text"></div><div class="form-group"><label>RG</label><input id="cl-rg" type="text"></div><div class="form-group"><label>Nascimento</label><input id="cl-nasc" type="date"></div><div class="form-group"><label>Telefone / WhatsApp</label><input id="cl-tel" type="text"></div><div class="form-group"><label>E-mail</label><input id="cl-email" type="email"></div><div class="form-group span2"><label>Endereço</label><input id="cl-end" type="text"></div><div class="form-group"><label>Profissão</label><input id="cl-prof" type="text"></div><div class="form-group"><label>Status</label><select id="cl-status"><option value="Ativo">Ativo</option><option value="Inativo">Inativo</option></select></div><div class="form-group span2"><label>Observações</label><textarea id="cl-obs"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-cliente')">Cancelar</button><button class="btn btn-navy" onclick="salvarCliente()"><i class="ph ph-floppy-disk"></i> Salvar</button></div></div></div>
+
+<div class="overlay" id="modal-processo"><div class="modal"><div class="modal-header"><div class="modal-title" id="t-processo">Novo Processo</div><button class="modal-close" onclick="closeModal('modal-processo')"><i class="ph ph-x"></i></button></div><div class="modal-body"><div class="form-grid"><div class="form-group span2"><label>Número do Processo</label><input id="pr-num" type="text" placeholder="0000000-00.0000.0.00.0000" maxlength="25" oninput="mascaraProcesso(this)"></div><div class="form-group span2"><label>Cliente *</label><select id="pr-cliente-idx" style="width: 100%;"><option value="">-- Selecione o Cliente --</option></select></div><div class="form-group"><label>Parte Contrária / Adverso</label><input id="pr-contra" type="text"></div><div class="form-group"><label>Comarca</label><input id="pr-comarca" type="text"></div><div class="form-group"><label>Vara / Fórum</label><input id="pr-vara" type="text"></div><div class="form-group"><label>Área do Direito</label><select id="pr-area"><option>Consumidor</option><option>Previdenciário</option><option>Cível</option><option>Trabalhista</option><option>Família</option><option>Outro</option></select></div><div class="form-group"><label>Fase Processual</label><select id="pr-fase"><option>Conhecimento</option><option>Recursal</option><option>Execução</option></select></div><div class="form-group"><label>Valor da Causa</label><input id="pr-valor" type="text" placeholder="R$ 0,00" oninput="mascaraMoeda(this)"></div><div class="form-group"><label>Data de Distribuição</label><input id="pr-data" type="date"></div><div class="form-group"><label>Indicação de</label><input id="pr-indicacao" type="text"></div><div class="form-group"><label>Status</label><select id="pr-status"><option value="Ativo">Ativo</option><option value="Arquivado">Arquivado</option></select></div><div class="form-group span2"><label>Resumo / Objeto da Ação</label><textarea id="pr-resumo"></textarea></div><div class="form-group span2"><label>Andamentos / Observações</label><textarea id="pr-obs"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-processo')">Cancelar</button><button class="btn btn-navy" onclick="salvarProcesso()"><i class="ph ph-floppy-disk"></i> Salvar</button></div></div></div>
+
+<div class="overlay" id="modal-prazo"><div class="modal"><div class="modal-header"><div class="modal-title" id="t-prazo">Novo Prazo</div><button class="modal-close" onclick="closeModal('modal-prazo')"><i class="ph ph-x"></i></button></div><div class="modal-body"><div class="form-grid"><div class="form-group span2"><label>O que precisa ser feito? *</label><input id="pz-desc" type="text"></div><div class="form-group"><label>Tipo</label><select id="pz-tipo"><option>Processual</option><option>Recursal</option><option>Diligência</option><option>Outro</option></select></div><div class="form-group"><label>Prioridade</label><select id="pz-prioridade"><option value="Normal">Normal</option><option value="Urgente">Urgente</option></select></div><div class="form-group"><label>Cliente</label><select id="pz-cliente"><option value="">— selecione —</option></select></div><div class="form-group"><label>Processo</label><select id="pz-processo"><option value="">— selecione —</option></select></div><div class="form-group"><label>Data Limite *</label><input id="pz-data" type="date"></div><div class="form-group"><label>Hora limite</label><input id="pz-hora" type="time"></div><div class="form-group"><label>Status</label><select id="pz-status"><option value="Pendente">Pendente</option><option value="Concluído">Concluído</option></select></div><div class="form-group span2"><label>Observações</label><textarea id="pz-obs"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-prazo')">Cancelar</button><button class="btn btn-navy" onclick="salvarPrazo()"><i class="ph ph-floppy-disk"></i> Salvar</button></div></div></div>
+
+<div class="overlay" id="modal-agenda"><div class="modal"><div class="modal-header"><div class="modal-title" id="t-agenda">Novo Evento</div><button class="modal-close" onclick="closeModal('modal-agenda')"><i class="ph ph-x"></i></button></div><div class="modal-body"><div class="form-grid"><div class="form-group span2"><label>Título *</label><input id="ag-titulo" type="text"></div><div class="form-group"><label>Tipo</label><select id="ag-tipo"><option>Audiência</option><option>Reunião com Cliente</option><option>Outro</option></select></div><div class="form-group"><label>Data *</label><input id="ag-data" type="date"></div><div class="form-group"><label>Cliente</label><select id="ag-cliente"><option value="">-</option></select></div><div class="form-group"><label>Processo</label><select id="ag-processo"><option value="">-</option></select></div><div class="form-group"><label>Horário</label><input id="ag-hora" type="time"></div><div class="form-group"><label>Local</label><input id="ag-local" type="text"></div><div class="form-group span2"><label>Obs</label><textarea id="ag-obs"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-agenda')">Cancelar</button><button class="btn btn-navy" onclick="salvarAgenda()">Salvar</button></div></div></div>
+
+<div class="overlay" id="modal-honrario"><div class="modal"><div class="modal-header"><div class="modal-title" id="t-hon">Lançar Honorário</div><button class="modal-close" onclick="closeModal('modal-honrario')"><i class="ph ph-x"></i></button></div><div class="modal-body"><div class="form-grid"><div class="form-group span2"><label>Descrição *</label><input id="hon-desc" type="text"></div><div class="form-group"><label>Cliente</label><select id="hon-cliente"><option value="">-</option></select></div><div class="form-group"><label>Processo</label><select id="hon-processo"><option value="">-</option></select></div><div class="form-group"><label>Valor *</label><input id="hon-valor" type="text" oninput="mascaraMoeda(this)"></div><div class="form-group"><label>Vencimento</label><input id="hon-venc" type="date"></div><div class="form-group"><label>Status</label><select id="hon-status"><option value="A Receber">A Receber</option><option value="Pago">Pago</option><option value="Vencido">Vencido</option></select></div><div class="form-group"><label>Pagamento</label><input id="hon-pgto" type="date"></div><div class="form-group span2"><label>Obs</label><textarea id="hon-obs"></textarea></div></div></div><div class="modal-footer"><button class="btn btn-ghost" onclick="closeModal('modal-honrario')">Cancelar</button><button class="btn btn-navy" onclick="salvarHonorario()">Salvar</button></div></div></div>
+
+<script>
+var DB = {
+  get: function(k) { return JSON.parse(localStorage.getItem('gc3_' + k) || '[]'); },
+  set: function(k, v) { localStorage.setItem('gc3_' + k, JSON.stringify(v)); }
+};
+var editIdx = { clientes: -1, processos: -1, honorarios: -1, agenda: -1, prazos: -1, compromissos: -1 };
+var curProc = -1;
+
+function fmt(v) { return 'R$ ' + parseFloat(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtD(d) { if (!d) return '—'; var p = d.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function tod() { return new Date().toISOString().split('T')[0]; }
+function diffDays(d) { var t = new Date(); t.setHours(0,0,0,0); return Math.round((new Date(d + 'T00:00:00') - t) / 86400000); }
+
+function mascaraMoeda(el) { var digits = el.value.replace(/\D/g, ''); mascaraMoedaVal(el, parseInt(digits || '0', 10)); }
+function mascaraMoedaVal(el, centavos) { if (!centavos && centavos !== 0) { el.value = ''; return; } el.value = 'R$ ' + (centavos / 100).toFixed(2).replace('.',',').replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'); }
+function extrairValor(str) { if (!str) return 0; return parseFloat(str.replace('R$', '').replace(/\./g, '').replace(',', '.').trim()) || 0; }
+function setVal(id, v) { var el = document.getElementById(id); if (el) el.value = (v !== undefined && v !== null) ? v : ''; }
+function clrFields(ids) { ids.forEach(function(id) { setVal(id, ''); }); }
+
+function mascaraProcesso(el) {
+  let v = el.value.replace(/\D/g, ""); 
+  if (v.length <= 7) { el.value = v; }
+  else if (v.length <= 9) { el.value = v.replace(/^(\d{7})(\d{1,2})/, "$1-$2"); }
+  else if (v.length <= 13) { el.value = v.replace(/^(\d{7})(\d{2})(\d{1,4})/, "$1-$2.$3"); }
+  else if (v.length <= 14) { el.value = v.replace(/^(\d{7})(\d{2})(\d{4})(\d{1})/, "$1-$2.$3.$4"); }
+  else if (v.length <= 16) { el.value = v.replace(/^(\d{7})(\d{2})(\d{4})(\d{1})(\d{1,2})/, "$1-$2.$3.$4.$5"); }
+  else { el.value = v.replace(/^(\d{7})(\d{2})(\d{4})(\d{1})(\d{2})(\d{1,4}).*/, "$1-$2.$3.$4.$5.$6"); }
+}
+
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(function(t) { t.classList.remove('active'); });
+  if (btn) { btn.classList.add('active'); } 
+  else {
+    document.querySelectorAll('.nav-tab').forEach(function(t) {
+      if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("showSection('" + id + "'")) { t.classList.add('active'); }
+    });
+  }
+  fecharDetalhe(); refreshAll();
+}
+
+function openModal(id) { 
+  populateSel(); 
+  if(id==='modal-cliente') document.getElementById('t-cliente').textContent = 'Novo Cliente';
+  if(id==='modal-processo') document.getElementById('t-processo').textContent = 'Novo Processo';
+  if(id==='modal-prazo') document.getElementById('t-prazo').textContent = 'Novo Prazo';
+  if(id==='modal-agenda') document.getElementById('t-agenda').textContent = 'Novo Evento';
+  if(id==='modal-honrario') document.getElementById('t-hon').textContent = 'Lançar Honorário';
+  document.getElementById(id).classList.add('open'); 
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); Object.keys(editIdx).forEach(function(k) { editIdx[k] = -1; }); }
+
+function populateSel() {
+  var cl = DB.get('clientes'), pr = DB.get('processos');
+  ['hon-cliente', 'ag-cliente', 'pz-cliente', 'pr-cliente-idx'].forEach(function(id) {
+    var el = document.getElementById(id); if (!el) return; var cur = el.value; el.innerHTML = '<option value="">— selecione —</option>';
+    cl.forEach(function(x, i) { el.appendChild(new Option(x.nome, i)); }); el.value = cur;
+  });
+  ['hon-processo', 'ag-processo', 'pz-processo'].forEach(function(id) {
+    var el = document.getElementById(id); if (!el) return; var cur = el.value; el.innerHTML = '<option value="">— selecione —</option>';
+    pr.forEach(function(x, i) { el.appendChild(new Option((x.num || 'S/N') + ' — ' + (x.clienteNome || ''), i)); }); el.value = cur;
+  });
+}
+
+function showPTab(id, btn) {
+  document.querySelectorAll('.proc-tab-content').forEach(function(t) { t.style.display = 'none'; });
+  document.getElementById(id).style.display = 'block';
+  document.querySelectorAll('.proc-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+// CLIENTES
+function salvarCliente() {
+  var nome = document.getElementById('cl-nome').value.trim(); if (!nome) { alert('Informe o nome.'); return; }
+  var obj = { nome: nome, tipo: document.getElementById('cl-tipo').value, doc: document.getElementById('cl-doc').value, tel: document.getElementById('cl-tel').value, email: document.getElementById('cl-email').value, rg: document.getElementById('cl-rg').value, nasc: document.getElementById('cl-nasc').value, end: document.getElementById('cl-end').value, prof: document.getElementById('cl-prof').value, status: document.getElementById('cl-status').value, obs: document.getElementById('cl-obs').value };
+  var l = DB.get('clientes'); if (editIdx.clientes >= 0) l[editIdx.clientes] = obj; else l.push(obj); DB.set('clientes', l);
+  closeModal('modal-cliente'); clrFields(['cl-nome', 'cl-doc', 'cl-tel', 'cl-email', 'cl-rg', 'cl-nasc', 'cl-end', 'cl-prof', 'cl-obs']); renderClientes(); renderDash();
+}
+
+function editCliente(i) {
+  var c = DB.get('clientes')[i]; editIdx.clientes = i; document.getElementById('t-cliente').textContent = 'Editar Cliente';
+  setVal('cl-nome', c.nome); setVal('cl-tipo', c.tipo); setVal('cl-doc', c.doc); setVal('cl-rg', c.rg); setVal('cl-nasc', c.nasc); setVal('cl-tel', c.tel); setVal('cl-email', c.email); setVal('cl-end', c.end); setVal('cl-prof', c.prof); setVal('cl-status', c.status); setVal('cl-obs', c.obs);
+  document.getElementById('modal-cliente').classList.add('open');
+}
+function delCliente(i) { if(confirm('Excluir?')) { var l = DB.get('clientes'); l.splice(i,1); DB.set('clientes', l); renderClientes(); renderDash(); } }
+
+function renderClientes() {
+  var list = DB.get('clientes'); var tb = document.getElementById('tb-clientes');
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty"><i class="ph ph-users empty-icon"></i><p>Nenhum cliente cadastrado</p></div></td></tr>'; return; }
+  tb.innerHTML = list.map(function(c, i) {
+    return '<tr><td><strong>' + c.nome + '</strong></td><td class="mono">' + (c.doc || '—') + '</td><td>' + (c.tel || '—') + '</td><td>' + c.tipo + '</td><td><span class="chip ' + (c.status === 'Ativo' ? 'ativo' : 'arquivado') + '">' + c.status + '</span></td><td><div class="actions"><button class="btn btn-ghost btn-xs" onclick="editCliente(' + i + ')"><i class="ph ph-pencil-simple"></i></button><button class="btn btn-danger btn-xs" onclick="delCliente(' + i + ')"><i class="ph ph-trash"></i></button></div></td></tr>';
+  }).join('');
+}
+function filterClientes(v) {
+  var list = DB.get('clientes'), fl = (v || '').toLowerCase();
+  var rows = list.filter(function(c) { return !fl || c.nome.toLowerCase().includes(fl) || (c.doc || '').includes(fl); });
+  var tb = document.getElementById('tb-clientes');
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty"><i class="ph ph-users empty-icon"></i><p>Nenhum cliente</p></div></td></tr>'; return; }
+  tb.innerHTML = rows.map(function(c) {
+    var ri = list.indexOf(c);
+    return '<tr><td><strong>' + c.nome + '</strong></td><td class="mono">' + (c.doc || '—') + '</td><td>' + (c.tel || '—') + '</td><td>' + c.tipo + '</td><td><span class="chip ' + (c.status === 'Ativo' ? 'ativo' : 'arquivado') + '">' + c.status + '</span></td><td><div class="actions"><button class="btn btn-ghost btn-xs" onclick="editCliente(' + ri + ')"><i class="ph ph-pencil-simple"></i></button><button class="btn btn-danger btn-xs" onclick="delCliente(' + ri + ')"><i class="ph ph-trash"></i></button></div></td></tr>';
+  }).join('');
+}
+
+// PROCESSOS
+function salvarProcesso() {
+  var ci = document.getElementById('pr-cliente-idx').value; if (ci === '') { alert('Selecione um cliente.'); return; }
+  var cl = DB.get('clientes');
+  var obj = { num: document.getElementById('pr-num').value.trim(), clienteIdx: ci, clienteNome: cl[parseInt(ci)] ? cl[parseInt(ci)].nome : '', contra: document.getElementById('pr-contra').value, comarca: document.getElementById('pr-comarca').value, vara: document.getElementById('pr-vara').value, area: document.getElementById('pr-area').value, fase: document.getElementById('pr-fase').value, valor: document.getElementById('pr-valor').value, data: document.getElementById('pr-data').value, indicacao: document.getElementById('pr-indicacao').value, status: document.getElementById('pr-status').value, resumo: document.getElementById('pr-resumo').value, obs: document.getElementById('pr-obs').value };
+  var l = DB.get('processos'); var isEdit = editIdx.processos >= 0; var editedIdx = editIdx.processos;
+  if (isEdit) l[editedIdx] = obj; else l.push(obj); DB.set('processos', l); closeModal('modal-processo');
+  clrFields(['pr-num', 'pr-contra', 'pr-comarca', 'pr-vara', 'pr-valor', 'pr-resumo', 'pr-obs', 'pr-indicacao', 'pr-data', 'pr-cliente-idx']); renderProcessos(); renderDash(); if (curProc >= 0) abrirDetalhe(isEdit ? editedIdx : l.length - 1);
+}
+
+function editProcesso(i) {
+  var p = DB.get('processos')[i]; editIdx.processos = i; document.getElementById('t-processo').textContent = 'Editar Processo'; populateSel(); 
+  setVal('pr-num', p.num); setVal('pr-cliente-idx', p.clienteIdx); setVal('pr-contra', p.contra); setVal('pr-comarca', p.comarca); setVal('pr-vara', p.vara); setVal('pr-area', p.area); setVal('pr-fase', p.fase); setVal('pr-valor', p.valor); setVal('pr-data', p.data); setVal('pr-indicacao', p.indicacao); setVal('pr-status', p.status); setVal('pr-resumo', p.resumo); setVal('pr-obs', p.obs);
+  document.getElementById('modal-processo').classList.add('open');
+}
+function delProcesso(i) { if (!confirm('Excluir este processo?')) return; var l = DB.get('processos'); l.splice(i, 1); DB.set('processos', l); fecharDetalhe(); renderProcessos(); renderDash(); }
+
+function renderProcessos() { filterProcessos(''); }
+function filterProcessos(v) {
+  var list = DB.get('processos'), fl = (v || '').toLowerCase();
+  var rows = list.filter(function(p) { return !fl || (p.num || '').toLowerCase().includes(fl) || (p.clienteNome || '').toLowerCase().includes(fl); });
+  var tb = document.getElementById('tb-processos');
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="8"><div class="empty"><i class="ph ph-folder-open empty-icon"></i><p>Nenhum processo</p></div></td></tr>'; return; }
+  tb.innerHTML = rows.map(function(p) {
+    var ri = list.indexOf(p);
+    return '<tr><td class="mono" style="cursor:pointer;color:var(--navy);font-weight:700" onclick="abrirDetalhe(' + ri + ')">' + (p.num || 'S/N') + '</td><td><strong style="cursor:pointer" onclick="abrirDetalhe(' + ri + ')" >' + (p.clienteNome || '—') + '</strong></td><td>' + (p.comarca || '—') + '</td><td>' + (p.vara || '—') + '</td><td>' + (p.area || '—') + '</td><td>' + (p.fase || '—') + '</td><td><span class="chip ' + (p.status === 'Ativo' ? 'ativo' : 'arquivado') + '">' + p.status + '</span></td><td><div class="actions"><button class="btn btn-ghost btn-sm" onclick="abrirDetalhe(' + ri + ')"><i class="ph ph-eye"></i></button></div></td></tr>';
+  }).join('');
+}
+
+// PRAZOS E AGENDA
+function salvarPrazo() {
+  var desc = document.getElementById('pz-desc').value.trim(); var data = document.getElementById('pz-data').value;
+  if (!desc || !data) { alert('Preencha a descrição e a data.'); return; }
+  var ci = document.getElementById('pz-cliente').value; var pi = document.getElementById('pz-processo').value; var cl = DB.get('clientes'), pr = DB.get('processos');
+  var obj = { desc: desc, tipo: document.getElementById('pz-tipo').value, prioridade: document.getElementById('pz-prioridade').value, clienteIdx: ci, clienteNome: ci !== '' ? (cl[parseInt(ci)] ? cl[parseInt(ci)].nome : '') : '', processoIdx: pi, processoNum: pi !== '' ? (pr[parseInt(pi)] ? (pr[parseInt(pi)].num || 'S/N') : '') : '', data: data, hora: document.getElementById('pz-hora').value, status: document.getElementById('pz-status').value, obs: document.getElementById('pz-obs').value };
+  var l = DB.get('prazos'); if (editIdx.prazos >= 0) l[editIdx.prazos] = obj; else l.push(obj); l.sort(function(a, b) { return a.data.localeCompare(b.data); }); DB.set('prazos', l); closeModal('modal-prazo'); clrFields(['pz-desc', 'pz-data', 'pz-hora', 'pz-obs', 'pz-cliente', 'pz-processo']); renderPrazos(); renderDash(); if (curProc >= 0) renderDetPrazos();
+}
+
+function editPrazo(i) {
+  var p = DB.get('prazos')[i]; editIdx.prazos = i; document.getElementById('t-prazo').textContent = 'Editar Prazo'; populateSel();
+  setVal('pz-desc', p.desc); setVal('pz-tipo', p.tipo); setVal('pz-prioridade', p.prioridade); setVal('pz-data', p.data); setVal('pz-hora', p.hora); setVal('pz-status', p.status); setVal('pz-obs', p.obs); setVal('pz-cliente', p.clienteIdx || ''); setVal('pz-processo', p.processoIdx || ''); document.getElementById('modal-prazo').classList.add('open');
+}
+function delPrazo(i) { if (!confirm('Excluir?')) return; var l = DB.get('prazos'); l.splice(i, 1); DB.set('prazos', l); renderPrazos(); renderDash(); if (curProc >= 0) renderDetPrazos(); }
+function concluirPrazo(i) { var l = DB.get('prazos'); l[i].status = 'Concluído'; DB.set('prazos', l); renderPrazos(); renderDash(); if (curProc >= 0) renderDetPrazos(); }
+
+function renderPrazos() {
+  var list = DB.get('prazos'); var tb = document.getElementById('tb-prazos');
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty"><i class="ph ph-clock empty-icon"></i><p>Nenhum prazo cadastrado</p></div></td></tr>'; return; }
+  var ord = list.map(function(p, i) { return Object.assign({}, p, { _i: i }); }).sort(function(a, b) {
+    if (a.status === 'Concluído' && b.status !== 'Concluído') return 1; if (b.status === 'Concluído' && a.status !== 'Concluído') return -1; return a.data.localeCompare(b.data);
+  });
+  tb.innerHTML = ord.map(function(p) {
+    var d = diffDays(p.data); var isConcl = p.status === 'Concluído';
+    var dLbl = isConcl ? 'Concluído' : (d < 0 ? 'Expirou há ' + Math.abs(d) + 'd' : (d === 0 ? 'HOJE!' : d + ' dias'));
+    var dStyle = isConcl ? '' : (d < 0 ? 'color:var(--danger);font-weight:700' : (d === 0 ? 'color:var(--danger);font-weight:700' : 'color:' + (d<=3 ? 'var(--danger)' : d<=7 ? 'var(--warning)' : 'var(--success)') + ';font-weight:700'));
+    var sitClass = isConcl ? 'concluido' : (d < 0 ? 'expirado' : (d <= 7 ? 'expirando' : 'em-dia'));
+    var sitLbl = isConcl ? 'Concluído' : (d < 0 ? 'Expirado' : (d <= 7 ? 'Expirando' : 'Em dia'));
+    return '<tr><td><strong>' + p.desc + '</strong>' + (p.prioridade === 'Urgente' ? ' <span class="chip urgente" style="font-size:0.65rem">URGENTE</span>' : '') + '</td><td>' + (p.clienteNome || '—') + '<br><span class="mono" style="font-size:0.75rem">' + (p.processoNum || '') + '</span></td><td style="' + dStyle + '">' + fmtD(p.data) + ' (' + dLbl + ')</td><td><span class="chip ' + (p.prioridade === 'Urgente' ? 'urgente' : 'em-dia') + '">' + (p.prioridade || 'Normal') + '</span></td><td><span class="chip ' + sitClass + '">' + sitLbl + '</span></td><td><div class="actions">' + (!isConcl ? '<button class="btn btn-success btn-xs" onclick="concluirPrazo(' + p._i + ')"><i class="ph ph-check"></i></button>' : '') + '<button class="btn btn-ghost btn-xs" onclick="editPrazo(' + p._i + ')"><i class="ph ph-pencil-simple"></i></button><button class="btn btn-danger btn-xs" onclick="delPrazo(' + p._i + ')"><i class="ph ph-trash"></i></button></div></td></tr>';
+  }).join('');
+}
+
+function salvarAgenda() {
+  var titulo = document.getElementById('ag-titulo').value.trim(); var data = document.getElementById('ag-data').value;
+  if (!titulo || !data) { alert('Preencha título e data.'); return; }
+  var ci = document.getElementById('ag-cliente').value; var pi = document.getElementById('ag-processo').value; var cl = DB.get('clientes'), pr = DB.get('processos');
+  var obj = { titulo: titulo, tipo: document.getElementById('ag-tipo').value, clienteIdx: ci, clienteNome: ci !== '' ? (cl[parseInt(ci)] ? cl[parseInt(ci)].nome : '') : '', processoIdx: pi, processoNum: pi !== '' ? (pr[parseInt(pi)] ? (pr[parseInt(pi)].num || 'S/N') : '') : '', data: data, hora: document.getElementById('ag-hora').value, local: document.getElementById('ag-local').value, obs: document.getElementById('ag-obs').value };
+  var l = DB.get('agenda'); if (editIdx.agenda >= 0) l[editIdx.agenda] = obj; else l.push(obj);
+  l.sort(function(a, b) { return a.data.localeCompare(b.data); }); DB.set('agenda', l); closeModal('modal-agenda'); clrFields(['ag-titulo', 'ag-data', 'ag-hora', 'ag-local', 'ag-obs', 'ag-cliente', 'ag-processo']); renderAgenda(); renderDash(); if (curProc >= 0) renderDetAg();
+}
+
+function editAgenda(i) {
+  var ev = DB.get('agenda')[i]; editIdx.agenda = i; document.getElementById('t-agenda').textContent = 'Editar Evento'; populateSel();
+  setVal('ag-titulo', ev.titulo); setVal('ag-tipo', ev.tipo); setVal('ag-data', ev.data); setVal('ag-hora', ev.hora); setVal('ag-local', ev.local); setVal('ag-obs', ev.obs); setVal('ag-cliente', ev.clienteIdx || ''); setVal('ag-processo', ev.processoIdx || ''); document.getElementById('modal-agenda').classList.add('open');
+}
+function delAgenda(i) { if (!confirm('Excluir?')) return; var l = DB.get('agenda'); l.splice(i, 1); DB.set('agenda', l); renderAgenda(); renderDash(); if (curProc >= 0) renderDetAg(); }
+
+function renderAgenda() {
+  var l = DB.get('agenda'); var c = document.getElementById('agenda-list');
+  if (!l.length) { c.innerHTML = '<div class="empty"><i class="ph ph-calendar-blank empty-icon"></i><p>Agenda vazia</p></div>'; return; }
+  c.innerHTML = l.map(function(ev, i) {
+    var parts = ev.data.split('-'); var months = ['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ']; var ip = ev.data < tod();
+    return '<div class="card" style="padding:16px; display:flex; gap:16px; margin-bottom:12px; opacity:' + (ip ? 0.6 : 1) + '; align-items: flex-start;"><div style="background:var(--surface-hover); border:1px solid var(--border); border-radius:8px; padding:10px; text-align:center; min-width:60px;"><div style="font-size:1.4rem; font-weight:800; color:var(--navy); line-height:1">' + parts[2] + '</div><div style="font-size:0.7rem; font-weight:700; color:var(--text-muted); margin-top:4px">' + months[parseInt(parts[1]) - 1] + '</div></div><div style="flex:1"><div style="font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:4px">' + ev.titulo + '</div><div style="font-size:0.8rem; color:var(--text-muted); display:flex; gap:12px; flex-wrap:wrap"><span><i class="ph-fill ph-circle" style="color:var(--gold); font-size:0.6rem; vertical-align:middle"></i> ' + ev.tipo + '</span>' + (ev.hora ? '<span><i class="ph ph-clock"></i> ' + ev.hora + '</span>' : '') + (ev.local ? '<span><i class="ph ph-map-pin"></i> ' + ev.local + '</span>' : '') + (ev.clienteNome ? '<span><i class="ph ph-user"></i> ' + ev.clienteNome + '</span>' : '') + '</div></div><div class="actions"><button class="btn btn-ghost btn-xs" onclick="editAgenda(' + i + ')"><i class="ph ph-pencil-simple"></i></button><button class="btn btn-danger btn-xs" onclick="delAgenda(' + i + ')"><i class="ph ph-trash"></i></button></div></div>';
+  }).join('');
+}
+
+function salvarHonorario() {
+  var desc = document.getElementById('hon-desc').value.trim(); var valorRaw = document.getElementById('hon-valor').value; var valor = extrairValor(valorRaw);
+  if (!desc || !valor) { alert('Preencha descrição e valor.'); return; }
+  var ci = document.getElementById('hon-cliente').value; var pi = document.getElementById('hon-processo').value; var cl = DB.get('clientes'), pr = DB.get('processos');
+  var obj = { desc: desc, clienteIdx: ci, clienteNome: ci !== '' ? (cl[parseInt(ci)] ? cl[parseInt(ci)].nome : '') : '', processoIdx: pi, processoNum: pi !== '' ? (pr[parseInt(pi)] ? (pr[parseInt(pi)].num || 'S/N') : '') : '', valor: valor, venc: document.getElementById('hon-venc').value, pgto: document.getElementById('hon-pgto').value, status: document.getElementById('hon-status').value, obs: document.getElementById('hon-obs').value };
+  var l = DB.get('honorarios'); if (editIdx.honorarios >= 0) l[editIdx.honorarios] = obj; else l.push(obj); DB.set('honorarios', l); closeModal('modal-honrario'); clrFields(['hon-desc', 'hon-valor', 'hon-venc', 'hon-pgto', 'hon-obs', 'hon-cliente', 'hon-processo']); renderHonorarios(); renderDash(); if (curProc >= 0) renderDetHon();
+}
+
+function editHonorario(i) {
+  var h = DB.get('honorarios')[i]; editIdx.honorarios = i; document.getElementById('t-hon').textContent = 'Editar Honorário'; populateSel();
+  setVal('hon-desc', h.desc); var elV = document.getElementById('hon-valor'); if (h.valor) { elV.value = ''; mascaraMoedaVal(elV, Math.round(h.valor * 100)); } else { elV.value = ''; }
+  setVal('hon-venc', h.venc); setVal('hon-pgto', h.pgto); setVal('hon-status', h.status); setVal('hon-obs', h.obs); setVal('hon-cliente', h.clienteIdx || ''); setVal('hon-processo', h.processoIdx || ''); document.getElementById('modal-honrario').classList.add('open');
+}
+function delHonorario(i) { if (!confirm('Excluir?')) return; var l = DB.get('honorarios'); l.splice(i, 1); DB.set('honorarios', l); renderHonorarios(); renderDash(); if (curProc >= 0) renderDetHon(); }
+function marcarPago(i) { var l = DB.get('honorarios'); l[i].status = 'Pago'; l[i].pgto = tod(); DB.set('honorarios', l); renderHonorarios(); renderDash(); if (curProc >= 0) renderDetHon(); }
+
+function renderHonorarios() {
+  var list = DB.get('honorarios'), t = tod(); var rec = 0, pago = 0, venc = 0;
+  list.forEach(function(h) { if (h.status === 'Pago') pago += h.valor; else if (h.status === 'Vencido' || (h.status === 'A Receber' && h.venc && h.venc < t)) venc += h.valor; else rec += h.valor; });
+  document.getElementById('hon-total-receber').textContent = fmt(rec); document.getElementById('hon-total-pago').textContent = fmt(pago); document.getElementById('hon-total-vencido').textContent = fmt(venc);
+  var tb = document.getElementById('tb-honorarios');
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="6"><div class="empty"><i class="ph ph-currency-dollar empty-icon"></i><p>Nenhum lançamento</p></div></td></tr>'; return; }
+  tb.innerHTML = list.map(function(h, i) {
+    var isV = h.status !== 'Pago' && h.venc && h.venc < t; var st = isV ? 'Vencido' : h.status;
+    return '<tr><td><strong>' + h.desc + '</strong></td><td>' + (h.clienteNome || '—') + '<br><span class="mono" style="font-size:0.75rem">' + (h.processoNum || '') + '</span></td><td style="color:var(--success);font-weight:700">' + fmt(h.valor) + '</td><td class="mono">' + fmtD(h.venc) + '</td><td><span class="chip ' + (st === 'Pago' ? 'pago' : st === 'Vencido' ? 'vencido' : 'receber') + '">' + st + '</span></td><td><div class="actions">' + (h.status !== 'Pago' ? '<button class="btn btn-success btn-xs" onclick="marcarPago(' + i + ')"><i class="ph ph-check"></i></button>' : '') + '<button class="btn btn-ghost btn-xs" onclick="editHonorario(' + i + ')"><i class="ph ph-pencil-simple"></i></button><button class="btn btn-danger btn-xs" onclick="delHonorario(' + i + ')"><i class="ph ph-trash"></i></button></div></td></tr>';
+  }).join('');
+}
+
+// DASHBOARD E INTEGRAÇÕES
+function renderDash() {
+  var cl = DB.get('clientes'), pr = DB.get('processos'), pz = DB.get('prazos'), hon = DB.get('honorarios'), ag = DB.get('agenda');
+  var t = tod(), mA = t.substring(0, 7);
+  
+  // Atualiza os cartões superiores
+  document.getElementById('s-clientes').textContent = cl.length; 
+  document.getElementById('s-processos').textContent = pr.length; 
+  document.getElementById('s-prazos').textContent = pz.filter(function(p) { return p.status !== 'Concluído'; }).length;
+  var rec = 0; hon.forEach(function(h) { if (h.status === 'Pago' && (h.pgto || '').indexOf(mA) === 0) rec += h.valor; }); document.getElementById('s-recebido').textContent = fmt(rec);
+  
+  // Banner de Urgências do Dia (Lógica Nova)
+  var urgencias = [];
+  pz.forEach(function(p) { if(p.data === t && p.status !== 'Concluído') urgencias.push('<strong>Prazo Fatal:</strong> ' + p.desc + (p.clienteNome ? ' (' + p.clienteNome + ')' : '')); });
+  ag.forEach(function(a) { if(a.data === t) urgencias.push('<strong>' + a.tipo + ':</strong> ' + a.titulo + (a.hora ? ' às ' + a.hora : '')); });
+  
+  var banner = document.getElementById('urgency-banner');
+  if(urgencias.length > 0) {
+    banner.style.display = 'block';
+    document.getElementById('urgency-count').textContent = urgencias.length;
+    document.getElementById('urgency-list').innerHTML = urgencias.map(function(u) { return '<li>' + u + '</li>'; }).join('');
+  } else {
+    banner.style.display = 'none';
+  }
+  
+  // Tabelas Menores
+  var dp = document.getElementById('dash-prazos-tb'); var pp = pz.filter(function(p) { return p.status !== 'Concluído'; }).slice(0, 5);
+  dp.innerHTML = pp.length ? pp.map(function(p) { return '<tr><td style="font-weight:700">' + p.desc + '</td><td style="color:var(--text-muted)">' + (p.clienteNome || 'Sem cliente') + '</td><td style="color:var(--danger); font-weight:700;">Vence em ' + fmtD(p.data) + '</td></tr>'; }).join('') : '<tr><td>Nenhum prazo urgente.</td></tr>';
+  
+  var dprc = document.getElementById('dash-proc-tb'); var prc = pr.slice(-5).reverse();
+  dprc.innerHTML = prc.length ? prc.map(function(p) { var ri = pr.indexOf(p); return '<tr style="cursor:pointer" onclick="abrirViaDash(' + ri + ')"><td><strong style="color:var(--navy)">' + (p.clienteNome || 'S/cliente') + '</strong><br><span class="mono" style="font-size:0.75rem">' + (p.num || 'S/N') + '</span></td><td>' + p.area + '</td><td><span class="chip ativo">' + p.fase + '</span></td></tr>'; }).join('') : '<tr><td>Nenhum processo ativo.</td></tr>';
+  
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// Animação de Boas Vindas
+setTimeout(function() {
+  var animText = document.getElementById('anim-greeting');
+  var staticText = document.getElementById('static-title');
+  if(animText && staticText) {
+    animText.style.opacity = '0';
+    setTimeout(function() { staticText.style.opacity = '1'; }, 400); // Espera o fadeout para iniciar o fadein
+  }
+}, 3500); // 3.5 segundos de animação
+
+function abrirDetalhe(i) {
+  curProc = i; var p = DB.get('processos')[i];
+  document.getElementById('proc-list-view').style.display = 'none'; document.getElementById('proc-detail-view').style.display = 'block';
+  document.getElementById('det-num').textContent = p.num || 'Sem número CNJ'; document.getElementById('det-cliente').textContent = p.clienteNome || 'Sem cliente';
+  document.getElementById('det-chips').innerHTML = '<span class="chip ativo">' + p.status + '</span><span class="chip arquivado" style="background:var(--surface-hover);">' + p.fase + '</span><span class="chip arquivado" style="background:var(--surface-hover);">' + p.area + '</span>';
+  document.getElementById('det-resumo').textContent = p.resumo || 'Nenhum resumo adicionado.'; document.getElementById('det-obs').textContent = p.obs || 'Nenhuma observação adicionada.';
+  document.getElementById('det-edit-btn').onclick = function() { editProcesso(i); }; document.getElementById('det-del-btn').onclick = function() { delProcesso(i); };
+  
+  var metas = [ { l: 'Comarca', v: p.comarca || '—' }, { l: 'Vara / Fórum', v: p.vara || '—' }, { l: 'Parte Adversa', v: p.contra || '—' }, { l: 'Valor da Causa', v: p.valor || '—' }, { l: 'Distribuição', v: fmtD(p.data) }, { l: 'Indicação', v: p.indicacao || '—' } ];
+  document.getElementById('det-meta').innerHTML = metas.map(function(m) { return '<div><div style="font-size:0.7rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px">' + m.l + '</div><div style="font-size:0.9rem; font-weight:700; color:var(--navy)">' + m.v + '</div></div>'; }).join('');
+  
+  document.querySelectorAll('.proc-tab-content').forEach(function(t) { t.style.display = 'none'; }); document.getElementById('pt-resumo').style.display = 'block';
+  document.querySelectorAll('.proc-tab').forEach(function(t) { t.classList.remove('active'); }); document.querySelector('.proc-tab').classList.add('active');
+  
+  renderDetPrazos(); renderDetAg(); renderDetHon();
+}
+
+function fecharDetalhe() { curProc = -1; document.getElementById('proc-list-view').style.display = ''; document.getElementById('proc-detail-view').style.display = 'none'; }
+
+function buscaGlobal(event, input) {
+  if (event.key !== 'Enter') return; 
+  var query = input.value.toLowerCase().trim(); if (!query) return;
+  var processos = DB.get('processos'), clientes = DB.get('clientes');
+  
+  var queryNumero = query.replace(/\D/g, ''); 
+  var procIndex = processos.findIndex(function(p) { return p.num && p.num.replace(/\D/g, '').includes(queryNumero) && queryNumero.length > 3; });
+  if (procIndex !== -1) { showSection('processos'); abrirDetalhe(procIndex); input.value = ''; input.blur(); return; }
+
+  var clienteEncontrado = clientes.find(function(c) { return (c.nome && c.nome.toLowerCase().includes(query)) || (c.email && c.email.toLowerCase().includes(query)) || (queryNumero && c.doc && c.doc.replace(/\D/g, '').includes(queryNumero) && queryNumero.length > 3) || (queryNumero && c.tel && c.tel.replace(/\D/g, '').includes(queryNumero) && queryNumero.length > 3); });
+  if (clienteEncontrado) { showSection('processos'); var searchProcessos = document.getElementById('busca-processos-input'); if(searchProcessos) { searchProcessos.value = clienteEncontrado.nome; filterProcessos(clienteEncontrado.nome); } input.value = ''; input.blur(); return; }
+  alert("Nenhum processo ou cliente encontrado para a busca: " + input.value);
+}
+
+function refreshAll() { renderClientes(); filterProcessos(''); renderPrazos(); renderAgenda(); renderHonorarios(); renderDash(); }
+refreshAll();
+</script>
+</body>
+</html>
