@@ -1,66 +1,111 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, session, redirect
 import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+app.secret_key = "secret123"
 
-# 1. Função para conectar e criar o banco de dados inicial (Apenas para Clientes por enquanto)
+DB = "database.db"
+
+def get_db():
+    return sqlite3.connect(DB)
+
 def init_db():
-    conn = sqlite3.connect('lexoffice.db')
-    cursor = conn.cursor()
-    
-    # Criando a tabela de Clientes
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS clientes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            tipo TEXT,
-            doc TEXT,
-            tel TEXT,
-            email TEXT,
-            status TEXT
-        )
-    ''')
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT,
+        sobrenome TEXT,
+        email TEXT UNIQUE,
+        senha TEXT
+    )
+    """)
+
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS clientes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nome TEXT
+    )
+    """)
+
     conn.commit()
     conn.close()
 
-# 2. Rota principal que carrega a sua interface (o seu index.html)
-@app.route('/')
+# ROTAS
+@app.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("login.html")
 
-# 3. Rota da API para gerenciar os Clientes
-@app.route('/api/clientes', methods=['GET', 'POST'])
-def gerenciar_clientes():
-    conn = sqlite3.connect('lexoffice.db')
-    cursor = conn.cursor()
+@app.route("/register")
+def register_page():
+    return render_template("register.html")
 
-    # Se o front-end (HTML) estiver SALVANDO um cliente novo
-    if request.method == 'POST':
-        dados = request.json
-        cursor.execute('''
-            INSERT INTO clientes (nome, tipo, doc, tel, email, status)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (dados.get('nome'), dados.get('tipo'), dados.get('doc'), 
-              dados.get('tel'), dados.get('email'), dados.get('status')))
+# LOGIN
+@app.route("/api/login", methods=["POST"])
+def login():
+    d = request.json
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT id, senha, nome FROM usuarios WHERE email=?", (d["email"],))
+    user = c.fetchone()
+    conn.close()
+
+    if user and check_password_hash(user[1], d["senha"]):
+        session["user"] = {"id": user[0], "nome": user[2]}
+        return jsonify({"ok": True, "nome": user[2]})
+
+    return jsonify({"erro": "Login inválido"}), 401
+
+# REGISTRO
+@app.route("/api/register", methods=["POST"])
+def register():
+    d = request.json
+
+    conn = get_db()
+    c = conn.cursor()
+
+    senha_hash = generate_password_hash(d["senha"])
+
+    try:
+        c.execute("""
+        INSERT INTO usuarios (nome, sobrenome, email, senha)
+        VALUES (?, ?, ?, ?)
+        """, (d["nome"], d["sobrenome"], d["email"], senha_hash))
+
+        conn.commit()
+    except:
+        conn.close()
+        return jsonify({"erro": "Email já cadastrado"}), 400
+
+    conn.close()
+    return jsonify({"ok": True})
+
+# CLIENTES
+@app.route("/api/clientes", methods=["GET", "POST"])
+def clientes():
+    if "user" not in session:
+        return jsonify({"erro": "Não autorizado"}), 403
+
+    conn = get_db()
+    c = conn.cursor()
+
+    if request.method == "POST":
+        d = request.json
+        c.execute("INSERT INTO clientes (nome) VALUES (?)", (d["nome"],))
         conn.commit()
         conn.close()
-        return jsonify({"mensagem": "Cliente salvo com sucesso!"}), 201
+        return jsonify({"ok": True})
 
-    # Se o front-end estiver BUSCANDO a lista de clientes
-    else:
-        cursor.execute("SELECT id, nome, tipo, doc, tel, email, status FROM clientes")
-        linhas = cursor.fetchall()
-        
-        lista_clientes = []
-        for linha in linhas:
-            lista_clientes.append({
-                "id": linha[0], "nome": linha[1], "tipo": linha[2], 
-                "doc": linha[3], "tel": linha[4], "email": linha[5], "status": linha[6]
-            })
-        conn.close()
-        return jsonify(lista_clientes)
+    c.execute("SELECT * FROM clientes")
+    rows = c.fetchall()
+    conn.close()
 
-if __name__ == '__main__':
-    init_db() # Garante que a tabela existe antes de rodar
-    # Roda o servidor na porta 5000
-    app.run(debug=True, port=5000)
+    return jsonify([{"id": r[0], "nome": r[1]} for r in rows])
+
+if __name__ == "__main__":
+    init_db()
+    app.run(debug=True)
